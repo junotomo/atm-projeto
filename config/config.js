@@ -31,7 +31,7 @@ const populateBD = async () => {
     if (Object.keys(collectionData).length === 0) {
 
         clientModel.create(client).then((createdClient) => {
-            console.log('Client created:', createdClient)
+
           })
           .catch((error) => {
             console.error('Error creating Client:', error)

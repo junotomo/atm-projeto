@@ -44,7 +44,7 @@ test("test to try to withdraw using negative number", async () => {
     const atm = atmModel.findOne.mockImplementationOnce(() => ({ 
             "notes": {"100": 100, "50": 50, "20":200, "10": 100}                    
         }))
-        console.log(atm.notes)
+
     clientModel.findOne.mockImplementationOnce(() => ({
         "pin": 777,
         "balance": 1000
@@ -63,7 +63,7 @@ test("test with number non divisible", async () => {
     const atm = atmModel.findOne.mockImplementationOnce(() => ({ 
             "notes": {"100": 100, "50": 50, "20":200, "10": 100}                    
         }))
-        console.log(atm.notes)
+
     clientModel.findOne.mockImplementationOnce(() => ({
         "pin": 777,
         "balance": 1000
