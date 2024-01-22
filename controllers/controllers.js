@@ -4,7 +4,6 @@ const notesFunctions = require('../utils/notes.js')
 const getData = async (req, res) => {
     try {
         const atm = await atmModel.find()
-        console.log(atm,atm[0])
         res.status(200).json({
                "number of notes": {
                     "100": atm[0].notes["100"],
@@ -47,11 +46,17 @@ const withdrawal = async (req, res, next) => {
 
         if (dividedNotes.rest === 0 ) {
            
-            notesFunctions.updateBalance(pin, amount)
-            notesFunctions.updateNotes(dividedNotes)
+            const newBalance = await notesFunctions.updateBalance(pin, amount)
+            const newCashQtd = await notesFunctions.updateNotes(dividedNotes)
+
+            const updateAtm = {
+                "receividNotes": dividedNotes,
+                "newBalance": newBalance,
+                "newCashQtd": newCashQtd
+            } 
             delete dividedNotes.rest
             res.status(200)
-            res.send(dividedNotes)
+            res.send(updateAtm)
         } else if(dividedNotes.rest != 0){
             res.status(400)
             res.send('Amount needs to be dividable by 10 or positive')

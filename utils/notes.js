@@ -34,7 +34,7 @@ const updateBalance =  async (pin,amount) => {
         update = clientUpddate.balance - amount
         if (update < 0) throw new Exception ("Not enough cash in your account.")
         let clientUpdate = await clientModel.findOneAndUpdate({"pin": pin },{"balance": update} )
-
+      return update
     } catch (e) {
         console.info(e.message)
     }
@@ -51,9 +51,10 @@ const updateNotes = async (dividedNotes) => {
         for( const [key, value] of Object.entries(notesUpdated)){
             if (value < 0) throw new Exception("no more notes of"+key)
         }       
-
+      
         let atmUpdate = await atmModel.findOneAndUpdate({}, {"notes": notesUpdated}) 
-
+        return notesUpdated
+      
     } catch (e) {
         console.error(e.message)
     }
