@@ -4,8 +4,8 @@ const controller = require('../controllers/controllers')
 
 const router = express.Router()
 
-router.get('/atm/atmData', controller.getData)
-router.get('/atm/balance', controller.getBalance)
-router.put('/atm/withdrawal', controller.withdrawal)
+router.get('/atm/atmNotesNumber', controller.getAtmRemainingBills)
+router.get('/atm/balance', controller.getAccountBalance)
+router.put('/atm/withdrawal', controller.withdrawalAccountMoney)
 
 module.exports = router

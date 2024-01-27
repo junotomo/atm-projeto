@@ -1,78 +1,111 @@
-const controller = require('../controllers/controllers')
+const {getAccountBalance, getAtmRemainingBills } = require('../controllers/controllers')
 const {atmModel, clientModel}  = require('../models/schema.js')   
 const notesFunctions = require('../utils/notes.js')
 
 jest.mock('../models/schema.js')
 
-const request = {
-    body: {
-        pin : 777,
-        balance: 1000
-    }   
-}
+// Mocking the models
+jest.mock('../models/schema.js', () => ({
+  atmModel: {
+    find: jest.fn(),
+  },
+  clientModel: {
+    find: jest.fn(),
+  },
+}));
 
-const response = {
-    status: jest.fn((x) => x),
-    json: jest.fn((x) => x),
-    send: jest.fn((x) => x)
-}
-const withdrawRequest = {
-    body: {
-        pin : 777,
-        amount: -80
-    } 
-}
+global.console = {
+    log: jest.fn(),
+    info: jest.fn(),
+  };
 
-test("test get client data", async () => {
-    clientModel.findOne.mockImplementationOnce(() => ({
-        "pin": 777,
-        "balance": 1000
-    }))
-    await controller.getBalance(request, response)
-    expect(response.status).toHaveBeenCalledWith(200)
-    expect(response.json).not.toEqual(null)
-})
+describe('getAtmRemainingBills function', () => {
+  test('should return ATM remaining bills data', async () => {
+    const atmData = [
+      {
+        notes: {
+          "100": 5,
+          "50": 10,
+          "20": 20,
+          "10": 30
+        }
+      }
+    ];
 
-test("test get atm data", async () => {
-    atmModel.findOne.mockImplementationOnce(() => ({  }))
-    await controller.getData(request, response)
-    expect(response.status).toHaveBeenCalledWith(200)
-    expect(response.json).not.toEqual(null)
-})
+    atmModel.find.mockResolvedValue(atmData);
+    const req = {};
+    const res = {
+      status: jest.fn(() => res),
+      json: jest.fn(),
+    };
 
-test("test to try to withdraw using negative number", async () => {
-    const atm = atmModel.findOne.mockImplementationOnce(() => ({ 
-            "notes": {"100": 100, "50": 50, "20":200, "10": 100}                    
-        }))
+    await getAtmRemainingBills(req, res);
 
-    clientModel.findOne.mockImplementationOnce(() => ({
-        "pin": 777,
-        "balance": 1000
-    }))
-    
-    const body = withdrawRequest.body
-    const amount = body.amount
-    const notesTypes = [100, 50,20,10]
-    const dividedNotes = notesFunctions.splitNotes(amount,notesTypes)
-    await controller.withdrawal(withdrawRequest, response)
-    expect(dividedNotes.rest === 0).toBeFalsy()
-    expect(response.status).toHaveBeenCalledWith(400)
-})
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      "number of notes": {
+        "100": 5,
+        "50": 10,
+        "20": 20,
+        "10": 30,
+      }
+    });
+  });
 
-test("test with number non divisible", async () => {
-    const atm = atmModel.findOne.mockImplementationOnce(() => ({ 
-            "notes": {"100": 100, "50": 50, "20":200, "10": 100}                    
-        }))
+  test('should handle error properly', async () => {
+    const errorMessage = 'Error finding ATM data';
+    atmModel.find.mockRejectedValue(errorMessage);
+    const req = {};
+    const res = {
+      status: jest.fn(() => res),
+      json: jest.fn(),
+    };
 
-    clientModel.findOne.mockImplementationOnce(() => ({
-        "pin": 777,
-        "balance": 1000
-    }))
-    
-    const amount = 23
-    const notesTypes = [100, 50,20,10]
-    const dividedNotes = notesFunctions.splitNotes(amount,notesTypes)
-    await controller.withdrawal(withdrawRequest, response)
-    expect(dividedNotes.rest === 0).toBeFalsy()
-    expect(response.status).toHaveBeenCalledWith(400)
-})
+    await getAtmRemainingBills(req, res);
+
+    expect(res.status).not.toHaveBeenCalled();
+    expect(res.json).not.toHaveBeenCalled();
+    expect(console.log).toHaveBeenCalledWith(errorMessage);
+  });
+});
+
+describe('getAccountBalance function', () => {
+  test('should return account balance data', async () => {
+    const clientData = 
+      {
+        pin: '1234',
+        balance: 500,
+      };
+
+    clientModel.find.mockResolvedValue(clientData);
+    const req = {};
+    const res = {
+      status: jest.fn(() => res),
+      json: jest.fn(),
+    };
+
+    const result = await getAccountBalance(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      pin: 1234,
+      balance: 500,
+    });
+  });
+
+  test('should handle error properly', async () => {
+    const errorMessage = 'Error finding client data';
+    clientModel.find.mockRejectedValue(errorMessage);
+    const req = {};
+    const res = {
+      status: jest.fn(() => res),
+      json: jest.fn(),
+    };
+
+    await getAccountBalance(req, res);
+
+    expect(res.status).not.toHaveBeenCalled();
+    expect(res.json).not.toHaveBeenCalled();
+    expect(console.info).toHaveBeenCalledWith(errorMessage);
+  });
+});

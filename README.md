@@ -38,7 +38,7 @@
    "100": 200
   }
 ```
-  (http://localhost:3000/atm/atmData)
+  (http://localhost:3000/atm/atmNotesNumber)
 ## PUT: Retira a quantidade desejada de dinheiro
  realiza um PUT request que recebe como párametro um Integer positivo atualiza o saldo do cliente, a quantidade de notas da máquina e retorna a quantidade de cada nota totalizando o valor requerido. Exemplo: 90
  ```

@@ -1,7 +1,8 @@
 const {atmModel, clientModel} = require('../models/schema.js')
-const notesFunctions = require('../utils/notes.js')
+const {splitNotes} = require('../utils/notes.js')
+const {updateAtmAndAccountBalance} = require('../utils/update.js')
 
-const getData = async (req, res) => {
+const getAtmRemainingBills = async (req, res) => {
     try {
         const atm = await atmModel.find()
         res.status(200).json({
@@ -14,12 +15,12 @@ const getData = async (req, res) => {
          })
     }
     catch (e) {
-        console.error(e.message)
+        console.log(e)
     }
 }
 
-const getBalance = async (req, res) => {
-    
+
+const getAccountBalance = async (req, res) => {
     try {
         const clientData = await clientModel.find()
         res.status(200)
@@ -34,27 +35,23 @@ const getBalance = async (req, res) => {
 }
 
 
-const withdrawal = async (req, res, next) => {
+const withdrawalAccountMoney = async (req, res) => {
     try {
         const body = req.body
         const amount = body.amount
         const pin = body.pin
         const atm = await atmModel.find()
-
         const notesTypes = Object.keys(atm[0].notes).reverse()
-        const dividedNotes = notesFunctions.splitNotes(amount,notesTypes)
+        const dividedNotes = splitNotes(amount,notesTypes)
 
         if (dividedNotes.rest === 0 ) {
-           
-            const newBalance = await notesFunctions.updateBalance(pin, amount)
-            const newCashQtd = await notesFunctions.updateNotes(dividedNotes)
-
+            const updatedValues  = await updateAtmAndAccountBalance(pin, amount,dividedNotes)
+            delete dividedNotes.rest
             const updateAtm = {
                 "receividNotes": dividedNotes,
-                "newBalance": newBalance,
-                "newCashQtd": newCashQtd
+                "newBalance": updatedValues.newBalance,
+                "newCashQtd": updatedValues.newCashQtd
             } 
-            delete dividedNotes.rest
             res.status(200)
             res.send(updateAtm)
         } else if(dividedNotes.rest != 0){
@@ -68,4 +65,4 @@ const withdrawal = async (req, res, next) => {
     }
 }
 
-module.exports = {withdrawal, getData, getBalance}
+module.exports = {withdrawalAccountMoney, getAtmRemainingBills, getAccountBalance}

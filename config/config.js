@@ -2,12 +2,12 @@ const mongoose = require('mongoose')
 const {atmModel, clientModel} = require('../models/schema.js')
 const uri = process.env.MONGODB_URI
 
-const client = {
+const clientAccountData = {
     pin: 777,
     balance: 10000
 }
 
-const notesObj = {
+const notesTypes = {
     notes: {
         "100":200,
         "50":200,
@@ -26,18 +26,19 @@ mongoose.connect(uri)
 })
 
 const populateBD = async () => {
+    
     let collectionData = await atmModel.find()
 
     if (Object.keys(collectionData).length === 0) {
 
-        clientModel.create(client).then((createdClient) => {
+        clientModel.create(clientAccountData).then((createdClient) => {
 
           })
           .catch((error) => {
             console.error('Error creating Client:', error)
         })
         
-        atmModel.create(notesObj).then((createdNotes) => {
+        atmModel.create(notesTypes).then((createdNotes) => {
             console.log('Notes created:', createdNotes)
           })
           .catch((error) => {
