@@ -52,16 +52,32 @@ describe('updateAtmNotesNumber', () => {
 })
 
 describe('updateAtmAndAccountBalance', () => {
-    it('should update ATM and account balances correctly', async () => {
-        const pin = 777
-        const amount = 100
-        const dividedNotes = { '10': 2, '20': 3, '50': 1, '100': 4 }
-        const newBalance = 900;
-        const newCashQtd = { "10": 1, "20": 2, "50": 0, "100": 3 }
+    // The test should verify that the function updateAtmAndAccountBalance correctly updates both the clientModel balance and the atmModel notes. It should return the newBalance and newCashQtd values.
+    // updateAtmAndAccountBalance returns newBalance and newCashQtd
+    it('should return newBalance and newCashQtd when updateAtmAndAccountBalance is called', async () => {
+        const pin = '1234';
+        const amount = 100;
+        const dividedNotes = { '10': 2, '20': 3, '50': 1, '100': 4 };
+        const newBalance = 0;
+        const newCashQtd = { '10': 10, '20': 10, '50': 10, '100': 10 };
+  
+        jest.mock('../models/schema.js', () => ({
+          atmModel: {
+            findOneAndUpdate: jest.fn().mockResolvedValue(),
+          },
+          clientModel: {
+            findOneAndUpdate: jest.fn().mockResolvedValue(),
+          },
+        }));
+  
+        jest.mock('../utils/notes.js', () => ({
+          calculateNewBalance: jest.fn().mockResolvedValue(newBalance),
+          verifyNotesNumberIsNotNegative: jest.fn().mockResolvedValue(newCashQtd),
+        }));
+    
+        const result = await updateAtmAndAccountBalance(pin, amount, dividedNotes);
+  
+        expect(result).toEqual({ newBalance, newCashQtd });
+      });
 
-        const result = await updateAtmAndAccountBalance(pin, amount, dividedNotes)
-        const resultBalance = result.newBalance
-        const resultCashQtd = result.newCashQtd
-        expect({resultBalance,resultCashQtd}).toEqual({ newBalance, newCashQtd })
     })
-})

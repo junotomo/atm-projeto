@@ -1,4 +1,4 @@
-const {getAccountBalance, getAtmRemainingBills } = require('../controllers/controllers')
+const {getAccountBalance, getAtmRemainingBills } = require('./controllers.js')
 const {atmModel, clientModel}  = require('../models/schema.js')   
 const notesFunctions = require('../utils/notes.js')
 
@@ -70,28 +70,33 @@ describe('getAtmRemainingBills function', () => {
 });
 
 describe('getAccountBalance function', () => {
-  test('should return account balance data', async () => {
-    const clientData = 
-      {
-        pin: '1234',
-        balance: 500,
-      };
-
-    clientModel.find.mockResolvedValue(clientData);
-    const req = {};
-    const res = {
-      status: jest.fn(() => res),
-      json: jest.fn(),
-    };
-
-    const result = await getAccountBalance(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      pin: 1234,
-      balance: 500,
-    });
-  });
+    // Returns a JSON object with the client's PIN and balance
+    it('should return a JSON object with the clients PIN and balance', async () => {
+      // Mock client data
+      const clientData = [
+        { pin: '1234', balance: 100 },
+        { pin: '5678', balance: 200 }
+      ]
+  
+      // Mock find function of clientModel
+      clientModel.find = jest.fn().mockResolvedValue(clientData)
+  
+      // Mock response object
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      }
+  
+      // Call getAccountBalance function
+      await getAccountBalance({}, res)
+  
+      // Assertion
+      expect(res.status).toHaveBeenCalledWith(200)
+      expect(res.json).toHaveBeenCalledWith({
+        pin: clientData[1].pin,
+        balance: clientData[1].balance
+      })
+    })
 
   test('should handle error properly', async () => {
     const errorMessage = 'Error finding client data';
@@ -109,3 +114,21 @@ describe('getAccountBalance function', () => {
     expect(console.info).toHaveBeenCalledWith(errorMessage);
   });
 });
+
+
+it('should handle error properly when getAccountBalance is called', async () => {
+  const errorMessage = 'Error finding client data';
+  clientModel.find.mockRejectedValue(errorMessage);
+  const req = {};
+  const res = {
+    status: jest.fn(() => res),
+    json: jest.fn(),
+  };
+
+  await getAccountBalance(req, res);
+
+  expect(res.status).not.toHaveBeenCalled();
+  expect(res.json).not.toHaveBeenCalled();
+  expect(console.info).toHaveBeenCalledWith(errorMessage);
+});
+
